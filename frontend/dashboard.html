@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Vault 2.0 - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--accent-color), #5dade2);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+
+        .btn {
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .badge {
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .password-field {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-vault me-2"></i>Secret Vault 2.0
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user me-1"></i>Welcome, <span id="username">admin</span>
+                </span>
+                <span class="navbar-text me-3" id="vaultStatus">
+                    <i class="fas fa-server me-1"></i>System: <span class="badge bg-success">Healthy</span>
+                </span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mt-4">
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-key fa-2x mb-2"></i>
+                        <h3 id="totalCredentials">0</h3>
+                        <p class="mb-0">Total Credentials</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <h3 id="expiringCredentials">0</h3>
+                        <p class="mb-0">Expiring Soon</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-tags fa-2x mb-2"></i>
+                        <h3 id="totalCategories">0</h3>
+                        <p class="mb-0">Categories</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-history fa-2x mb-2"></i>
+                        <h3 id="recentActions">0</h3>
+                        <p class="mb-0">Recent Actions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="search-container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search credentials by title, username, or category...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="categoryFilter">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#credentialModal" onclick="openAddModal()">
+                        <i class="fas fa-plus me-2"></i>Add Credential
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credentials Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Credentials</h5>
+            </div>
+            <div class="card-body">
+                <div class="loading" id="loadingSpinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading credentials...</p>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="credentialsTable">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-heading me-1"></i>Title</th>
+                                <th><i class="fas fa-user me-1"></i>Username</th>
+                                <th><i class="fas fa-lock me-1"></i>Password</th>
+                                <th><i class="fas fa-link me-1"></i>URL</th>
+                                <th><i class="fas fa-tag me-1"></i>Category</th>
+                                <th><i class="fas fa-clock me-1"></i>Expires</th>
+                                <th><i class="fas fa-cog me-1"></i>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="credentialsTableBody">
+                            <!-- Credentials will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Logs Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                            <!-- Audit logs will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Credential Modal -->
+    <div class="modal fade" id="credentialModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="fas fa-plus me-2"></i>Add New Credential
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="credentialForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">
+                                        <i class="fas fa-heading me-1"></i>Title *
+                                    </label>
+                                    <input type="text" class="form-control" id="title" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Username *
+                                    </label>
+                                    <input type="text" class="form-control" id="usernameField" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">
+                                        <i class="fas fa-lock me-1"></i>Password *
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="passwordField" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('passwordField')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" type="button" onclick="generatePassword()">
+                                            <i class="fas fa-magic"></i> Generate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Category
+                                    </label>
+                                    <input type="text" class="form-control" id="category" placeholder="e.g., Email, Social">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="url" class="form-label">
+                                <i class="fas fa-link me-1"></i>URL
+                            </label>
+                            <input type="url" class="form-control" id="url" placeholder="https://example.com">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="expiresAt" class="form-label">
+                                        <i class="fas fa-calendar me-1"></i>Expires At
+                                    </label>
+                                    <input type="datetime-local" class="form-control" id="expiresAt">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">
+                                <i class="fas fa-sticky-note me-1"></i>Notes
+                            </label>
+                            <textarea class="form-control" id="notes" rows="3" placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Credential
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Password Modal -->
+    <div class="modal fade" id="passwordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-eye me-2"></i>View Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Make sure no one is looking over your shoulder!
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password for: <strong id="passwordTitle"></strong></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="revealedPassword" readonly>
+                            <button class="btn btn-outline-primary" onclick="copyToClipboard('revealedPassword')">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000';
+        const credentials = btoa('admin:admin123'); // Base64 encode for basic auth
+        let currentCredentials = [];
+        let editingCredentialId = null;
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+            setupEventListeners();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', filterCredentials);
+            document.getElementById('categoryFilter').addEventListener('change', filterCredentials);
+
+            // Form submission
+            document.getElementById('credentialForm').addEventListener('submit', handleFormSubmit);
+
+            // Auto-refresh every 30 seconds
+            setInterval(loadCredentials, 30000);
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            await Promise.all([
+                loadCredentials(),
+                loadAuditLogs(),
+                checkSystemHealth()
+            ]);
+            updateStats();
+        }
+
+        // API call helper
+        // API call helper with enhanced error handling
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}/${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Authorization': `Basic ${credentials}`,
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                if (!response.ok) {
+                    // Try to get error details from response
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.detail) {
+                            if (Array.isArray(errorData.detail)) {
+                                // Handle Pydantic validation errors
+                                errorMessage = errorData.detail.map(err => 
+                                    `${err.loc ? err.loc.join('.') : 'Field'}: ${err.msg}`
+                                ).join(', ');
+                            } else {
+                                errorMessage = errorData.detail;
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback to status text if JSON parsing fails
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                throw error;
+            }
+        }
+
+
+        // Load credentials
+        async function loadCredentials() {
+            showLoading(true);
+            try {
+                const data = await apiCall('/credentials');
+                currentCredentials = data;
+                renderCredentialsTable(data);
+                updateCategoryFilter(data);
+            } catch (error) {
+                console.error('Failed to load credentials:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Render credentials table
+        function renderCredentialsTable(credentials) {
+            const tbody = document.getElementById('credentialsTableBody');
+            
+            if (credentials.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No credentials found. Add your first credential!</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = credentials.map(cred => {
+                const expiryBadge = getExpiryBadge(cred.expires_at);
+                const categoryBadge = cred.category ? 
+                    `<span class="badge bg-secondary">${cred.category}</span>` : 
+                    '<span class="text-muted">-</span>';
+                
+                return `
+                    <tr>
+                        <td><strong>${cred.title}</strong></td>
+                        <td>${cred.username}</td>
+                        <td>
+                            <span class="password-field" onclick="viewPassword(${cred.id}, '${cred.title}')">
+                                <i class="fas fa-eye me-1"></i>Click to view
+                            </span>
+                        </td>
+                        <td>
+                            ${cred.url ? `<a href="${cred.url}" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>Visit
+                            </a>` : '<span class="text-muted">-</span>'}
+                        </td>
+                        <td>${categoryBadge}</td>
+                        <td>${expiryBadge}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editCredential(${cred.id})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteCredential(${cred.id}, '${cred.title}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Get expiry badge
+        function getExpiryBadge(expiresAt) {
+            if (!expiresAt) return '<span class="text-muted">Never</span>';
+            
+            const expiry = new Date(expiresAt);
+            const now = new Date();
+            const diffTime = expiry - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return '<span class="badge bg-danger">Expired</span>';
+            } else if (diffDays <= 7) {
+                return `<span class="badge bg-warning">Expires in ${diffDays} days</span>`;
+            } else if (diffDays <= 30) {
+                return `<span class="badge bg-info">Expires in ${diffDays} days</span>`;
+            } else {
+                return `<span class="badge bg-success">Valid</span>`;
+            }
+        }
+
+        // Update category filter
+        function updateCategoryFilter(credentials) {
+            const categories = [...new Set(credentials.map(c => c.category).filter(c => c))];
+            const select = document.getElementById('categoryFilter');
+            
+            // Keep the "All Categories" option and add unique categories
+            select.innerHTML = '<option value="">All Categories</option>' +
+                categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+
+        // Filter credentials
+        function filterCredentials() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCategory = document.getElementById('categoryFilter').value;
+            
+            const filtered = currentCredentials.filter(cred => {
+                const matchesSearch = !searchTerm || 
+                    cred.title.toLowerCase().includes(searchTerm) ||
+                    cred.username.toLowerCase().includes(searchTerm) ||
+                    (cred.category && cred.category.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = !selectedCategory || cred.category === selectedCategory;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            renderCredentialsTable(filtered);
+        }
+
+        // Show/hide loading spinner
+        function showLoading(show) {
+            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+            document.getElementById('credentialsTable').style.display = show ? 'none' : 'table';
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Open add modal
+        function openAddModal() {
+            editingCredentialId = null;
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus me-2"></i>Add New Credential';
+            document.getElementById('credentialForm').reset();
+        }
+
+        // Edit credential
+        // Edit credential
+        async function editCredential(id) {
+            try {
+                const credential = await apiCall(`credentials/${id}`);
+                editingCredentialId = id;
+                
+                // Populate form
+                document.getElementById('title').value = credential.title;
+                document.getElementById('usernameField').value = credential.username;
+                document.getElementById('passwordField').value = credential.password;
+                document.getElementById('url').value = credential.url || '';
+                document.getElementById('category').value = credential.category || '';
+                document.getElementById('notes').value = credential.notes || '';
+                
+                // Fix datetime display for editing
+                if (credential.expires_at) {
+                    const date = new Date(credential.expires_at);
+                    // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+                    const formattedDate = date.getFullYear() + '-' +
+                        String(date.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(date.getDate()).padStart(2, '0') + 'T' +
+                        String(date.getHours()).padStart(2, '0') + ':' +
+                        String(date.getMinutes()).padStart(2, '0');
+                    document.getElementById('expiresAt').value = formattedDate;
+                }
+                
+                document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Credential';
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('credentialModal')).show();
+            } catch (error) {
+                showAlert('Failed to load credential details', 'danger');
+            }
+        }
+
+
+        // Handle form submission
+        // Handle form submission
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            // Get form data
+            let formData = {
+                title: document.getElementById('title').value,
+                username: document.getElementById('usernameField').value,
+                password: document.getElementById('passwordField').value,
+                url: document.getElementById('url').value || null,
+                category: document.getElementById('category').value || null,
+                notes: document.getElementById('notes').value || null,
+                expires_at: document.getElementById('expiresAt').value || null
+            };
+            
+            // Fix datetime format - convert to ISO string with 'T' separator
+            if (formData.expires_at) {
+                // If it's from datetime-local input, it should already be in correct format
+                // But ensure it has the 'T' separator for API compatibility
+                if (!formData.expires_at.includes('T')) {
+                    formData.expires_at = formData.expires_at.replace(' ', 'T');
+                }
+                // Add seconds if not present
+                if (formData.expires_at.length === 16) {
+                    formData.expires_at += ':00';
+                }
+            }
+            
+            try {
+                if (editingCredentialId) {
+                    // Update existing credential
+                    await apiCall(`credentials/${editingCredentialId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(formData)
+                    });
+                    showAlert('Credential updated successfully!', 'success');
+                } else {
+                    // Create new credential
+                    await apiCall('credentials', {
+                        method: 'POST',
+                        body: JSON.stringify(formData)
+                    });
+                    showAlert('Credential added successfully!', 'success');
+                }
+                
+                // Close modal and reload data
+                bootstrap.Modal.getInstance(document.getElementById('credentialModal')).hide();
+                await loadCredentials();
+                updateStats();
+            } catch (error) {
+                showAlert('Failed to save credential: ' + error.message, 'danger');
+            }
+        }
+
+        // Delete credential
+        async function deleteCredential(id, title) {
+            if (!confirm(`Are you sure you want to delete "${title}"?`)) {
+                return;
+            }
+            
+            try {
+                await apiCall(`/credentials/${id}`, { method: 'DELETE' });
+                showAlert('Credential deleted successfully!', 'success');
+                await loadCredentials();
+                updateStats();
+            } catch (error) {
+                showAlert('Failed to delete credential', 'danger');
+            }
+        }
+
+        // View password
+        async function viewPassword(id, title) {
+            try {
+                const credential = await apiCall(`/credentials/${id}`);
+                document.getElementById('passwordTitle').textContent = title;
+                document.getElementById('revealedPassword').value = credential.password;
+                new bootstrap.Modal(document.getElementById('passwordModal')).show();
+            } catch (error) {
+                showAlert('Failed to retrieve password', 'danger');
+            }
+        }
+
+        // Toggle password visibility
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                field.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
+        // Generate random password
+        function generatePassword() {
+            const length = 16;
+            const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+            let password = '';
+            
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            
+            document.getElementById('passwordField').value = password;
+            showAlert('Password generated successfully!', 'info');
+        }
+
+        // Copy to clipboard
+        async function copyToClipboard(elementId) {
+            try {
+                const element = document.getElementById(elementId);
+                await navigator.clipboard.writeText(element.value);
+                showAlert('Password copied to clipboard!', 'success');
+            } catch (error) {
+                showAlert('Failed to copy password', 'danger');
+            }
+        }
+
+        // Load audit logs
+        // Load audit logs with flexible column handling
+        async function loadAuditLogs() {
+            try {
+                const logs = await apiCall('audit');
+                const tbody = document.getElementById('auditTableBody');
+                
+                if (!logs || logs.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">No audit logs found</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Handle flexible audit log structure
+                tbody.innerHTML = logs.slice(0, 10).map(log => {
+                    // Try different possible field names for user
+                    const userField = log.user || log.user_email || log.email || log.username || 'Unknown';
+                    const actionField = log.action || log.event_type || log.activity || 'Unknown';
+                    const detailsField = log.details || log.description || log.notes || '-';
+                    const timestampField = log.timestamp || log.created_at || log.date;
+                    
+                    return `
+                        <tr>
+                            <td><small>${new Date(timestampField).toLocaleString()}</small></td>
+                            <td><span class="badge bg-primary">${userField}</span></td>
+                            <td><span class="badge bg-info">${actionField}</span></td>
+                            <td><small>${detailsField}</small></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Failed to load audit logs:', error);
+                const tbody = document.getElementById('auditTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>Failed to load audit logs</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+
+        // Check system health
+        async function checkSystemHealth() {
+            try {
+                const health = await apiCall('/health');
+                const vaultStatus = document.getElementById('vaultStatus');
+                
+                if (health.status === 'healthy') {
+                    vaultStatus.innerHTML = '<i class="fas fa-server me-1"></i>System: <span class="badge bg-success">Healthy</span>';
+                    
+                    // Check Vault status if available
+                    if (health.vault) {
+                        if (health.vault.status === 'healthy') {
+                            vaultStatus.innerHTML += ' <span class="badge bg-success ms-1">Vault: Healthy</span>';
+                        } else {
+                            vaultStatus.innerHTML += ' <span class="badge bg-warning ms-1">Vault: Unavailable</span>';
+                        }
+                    }
+                } else {
+                    vaultStatus.innerHTML = '<i class="fas fa-server me-1"></i>System: <span class="badge bg-danger">Unhealthy</span>';
+                }
+            } catch (error) {
+                console.error('Failed to check system health:', error);
+                document.getElementById('vaultStatus').innerHTML = '<i class="fas fa-server me-1"></i>System: <span class="badge bg-danger">Error</span>';
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = currentCredentials.length;
+            const categories = new Set(currentCredentials.map(c => c.category).filter(c => c));
+            
+            // Count expiring credentials (within 30 days)
+            const now = new Date();
+            const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+            const expiring = currentCredentials.filter(cred => {
+                if (!cred.expires_at) return false;
+                const expiry = new Date(cred.expires_at);
+                return expiry <= thirtyDaysFromNow && expiry > now;
+            }).length;
+            
+            document.getElementById('totalCredentials').textContent = total;
+            document.getElementById('expiringCredentials').textContent = expiring;
+            document.getElementById('totalCategories').textContent = categories.size;
+        }
+
+        // Update recent actions count from audit logs
+        async function updateRecentActions() {
+            try {
+                const logs = await apiCall('/audit');
+                const today = new Date();
+                const yesterday = new Date(today.getTime() - (24 * 60 * 60 * 1000));
+                
+                const recentActions = logs.filter(log => {
+                    const logDate = new Date(log.timestamp);
+                    return logDate >= yesterday;
+                }).length;
+                
+                document.getElementById('recentActions').textContent = recentActions;
+            } catch (error) {
+                console.error('Failed to update recent actions:', error);
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored credentials and redirect
+                showAlert('Logged out successfully!', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        }
+
+        // Initialize stats update
+        setTimeout(updateRecentActions, 1000);
+
+        // Utility function to format dates
+        function formatDate(dateString) {
+            if (!dateString) return 'Never';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + K for search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+            
+            // Ctrl/Cmd + N for new credential
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                openAddModal();
+                new bootstrap.Modal(document.getElementById('credentialModal')).show();
+            }
+        });
+
+        // Add tooltips to buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+</body>
+</html>

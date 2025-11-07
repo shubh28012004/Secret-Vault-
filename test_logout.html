@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Test</title>
+</head>
+<body>
+    <h1>Logout Test</h1>
+    <p>Current localStorage contents:</p>
+    <div id="localStorageContents"></div>
+    
+    <button onclick="testLogout()">Test Logout</button>
+    <button onclick="showLocalStorage()">Show localStorage</button>
+    
+    <script>
+        function showLocalStorage() {
+            const contents = document.getElementById('localStorageContents');
+            let html = '<ul>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                html += `<li><strong>${key}:</strong> ${value}</li>`;
+            }
+            html += '</ul>';
+            contents.innerHTML = html;
+        }
+        
+        function testLogout() {
+            // Simulate the logout function
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('refreshToken');
+            
+            alert('Logout completed! Check localStorage contents.');
+            showLocalStorage();
+        }
+        
+        // Show localStorage on page load
+        showLocalStorage();
+    </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Vault - Sign Up</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .signup-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .signup-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .password-strength {
+            margin-top: 10px;
+        }
+        
+        .strength-bar {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .strength-weak { background-color: #dc3545; }
+        .strength-fair { background-color: #ffc107; }
+        .strength-good { background-color: #17a2b8; }
+        .strength-strong { background-color: #28a745; }
+        
+        .strength-text {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .form-floating {
+            margin-bottom: 20px;
+        }
+        
+        .btn-signup {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .form-check {
+            margin-bottom: 20px;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-card">
+            <div class="text-center mb-4">
+                <i data-feather="shield" class="text-primary" style="width: 48px; height: 48px;"></i>
+                <h3 class="mt-2">Create Your Account</h3>
+                <p class="text-muted">Join Secret Vault for secure credential management</p>
+            </div>
+            
+            <form id="signupForm">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="fullName" placeholder="Full Name" required>
+                    <label for="fullName">Full Name</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="username" placeholder="Username" required>
+                    <label for="username">Username</label>
+                    <div class="form-text">3-20 characters, alphanumeric and underscore only</div>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="email" placeholder="Email" required>
+                    <label for="email">Email Address</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="password" placeholder="Password" required>
+                    <label for="password">Password</label>
+                </div>
+                
+                <div class="password-strength">
+                    <div class="strength-bar" id="strengthBar"></div>
+                    <div class="strength-text" id="strengthText">Enter a password</div>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required>
+                    <label for="confirmPassword">Confirm Password</label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                    <label class="form-check-label" for="termsCheck">
+                        I agree to the <a href="#" onclick="showTerms()">Terms of Service</a> and <a href="#" onclick="showPrivacy()">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="newsletterCheck">
+                    <label class="form-check-label" for="newsletterCheck">
+                        Send me security updates and tips (optional)
+                    </label>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-signup" id="signupBtn">
+                        <i data-feather="user-plus"></i> Create Account
+                    </button>
+                </div>
+                
+                <div id="signupError" class="alert alert-danger mt-3 d-none"></div>
+                <div id="signupSuccess" class="alert alert-success mt-3 d-none"></div>
+            </form>
+            
+            <div class="login-link">
+                Already have an account? <a href="/login">Sign In</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        feather.replace();
+        
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let score = 0;
+            let feedback = [];
+            
+            // Length check
+            if (password.length >= 8) score++;
+            else feedback.push("At least 8 characters");
+            
+            // Uppercase check
+            if (/[A-Z]/.test(password)) score++;
+            else feedback.push("Uppercase letter");
+            
+            // Lowercase check
+            if (/[a-z]/.test(password)) score++;
+            else feedback.push("Lowercase letter");
+            
+            // Digit check
+            if (/\d/.test(password)) score++;
+            else feedback.push("Number");
+            
+            // Special character check
+            if (/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)) score++;
+            else feedback.push("Special character");
+            
+            // Entropy check
+            const uniqueChars = new Set(password).size;
+            if (uniqueChars >= password.length * 0.7) score++;
+            else feedback.push("More varied characters");
+            
+            return { score, feedback };
+        }
+        
+        function updatePasswordStrength(password) {
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            if (!password) {
+                strengthBar.className = 'strength-bar';
+                strengthBar.style.width = '0%';
+                strengthText.textContent = 'Enter a password';
+                return;
+            }
+            
+            const { score, feedback } = checkPasswordStrength(password);
+            const percentage = (score / 6) * 100;
+            
+            strengthBar.style.width = percentage + '%';
+            strengthBar.className = 'strength-bar';
+            
+            if (score <= 2) {
+                strengthBar.classList.add('strength-weak');
+                strengthText.textContent = 'Weak password';
+            } else if (score <= 3) {
+                strengthBar.classList.add('strength-fair');
+                strengthText.textContent = 'Fair password';
+            } else if (score <= 4) {
+                strengthBar.classList.add('strength-good');
+                strengthText.textContent = 'Good password';
+            } else {
+                strengthBar.classList.add('strength-strong');
+                strengthText.textContent = 'Strong password';
+            }
+        }
+        
+        // Username validation
+        function validateUsername(username) {
+            const regex = /^[a-zA-Z0-9_]{3,20}$/;
+            return regex.test(username);
+        }
+        
+        // Email validation
+        function validateEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
+        }
+        
+        // Form validation
+        function validateForm() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const termsCheck = document.getElementById('termsCheck').checked;
+            
+            // Clear previous errors
+            document.getElementById('signupError').classList.add('d-none');
+            
+            // Validation checks
+            if (fullName.length < 2) {
+                showError('Full name must be at least 2 characters');
+                return false;
+            }
+            
+            if (!validateUsername(username)) {
+                showError('Username must be 3-20 characters, alphanumeric and underscore only');
+                return false;
+            }
+            
+            if (!validateEmail(email)) {
+                showError('Please enter a valid email address');
+                return false;
+            }
+            
+            const { score } = checkPasswordStrength(password);
+            if (score < 3) {
+                showError('Password is too weak. Please choose a stronger password.');
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return false;
+            }
+            
+            if (!termsCheck) {
+                showError('Please agree to the Terms of Service and Privacy Policy');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('signupError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('d-none');
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('signupSuccess');
+            successDiv.textContent = message;
+            successDiv.classList.remove('d-none');
+        }
+        
+        function showTerms() {
+            alert('Terms of Service:\n\n1. You are responsible for keeping your credentials secure\n2. We use industry-standard encryption\n3. We do not store your master password\n4. You must not use this service for illegal activities\n5. We reserve the right to terminate accounts that violate these terms');
+        }
+        
+        function showPrivacy() {
+            alert('Privacy Policy:\n\n1. We collect only necessary information for account creation\n2. Your credentials are encrypted and cannot be accessed by us\n3. We use your email for account verification and security notifications\n4. We do not share your personal information with third parties\n5. You can request account deletion at any time');
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const signupForm = document.getElementById('signupForm');
+            
+            // Password strength real-time feedback
+            passwordInput.addEventListener('input', function() {
+                updatePasswordStrength(this.value);
+            });
+            
+            // Confirm password validation
+            confirmPasswordInput.addEventListener('input', function() {
+                const password = document.getElementById('password').value;
+                if (this.value && this.value !== password) {
+                    this.setCustomValidity('Passwords do not match');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            // Form submission
+            signupForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                const signupBtn = document.getElementById('signupBtn');
+                const originalText = signupBtn.innerHTML;
+                
+                // Show loading state
+                signupBtn.innerHTML = '<i data-feather="loader" class="spinner-border spinner-border-sm"></i> Creating Account...';
+                signupBtn.disabled = true;
+                
+                try {
+                    const formData = {
+                        full_name: document.getElementById('fullName').value.trim(),
+                        username: document.getElementById('username').value.trim(),
+                        email: document.getElementById('email').value.trim(),
+                        password: document.getElementById('password').value
+                    };
+                    
+                    const response = await fetch('/auth/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showSuccess('Account created successfully! Please check your email to verify your account.');
+                        signupForm.reset();
+                        document.getElementById('strengthBar').style.width = '0%';
+                        document.getElementById('strengthText').textContent = 'Enter a password';
+                    } else {
+                        showError(data.detail || 'Failed to create account. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Signup error:', error);
+                    showError('An error occurred during signup. Please try again.');
+                } finally {
+                    // Reset button state
+                    signupBtn.innerHTML = originalText;
+                    signupBtn.disabled = false;
+                    feather.replace();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

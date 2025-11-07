@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Secret Vault - Login</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="text-center mb-4">
+                <i data-feather="shield" class="text-primary" style="width: 48px; height: 48px;"></i>
+                <h3 class="mt-2">Welcome Back</h3>
+                <p class="text-muted">Sign in to your Secret Vault account</p>
+            </div>
+            
+            
+            
+            <form id="loginForm">
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="email" placeholder="Email" required>
+                    <label for="email">Email Address</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="password" placeholder="Password" required>
+                    <label for="password">Password</label>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-login" id="loginBtn">
+                        <i data-feather="log-in"></i> Sign In
+                    </button>
+                </div>
+                
+                <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+                <div id="loginSuccess" class="alert alert-success mt-3 d-none"></div>
+                <div id="verifyNotice" class="alert alert-warning mt-3 d-none">
+                    Please verify your email before logging in.
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="resendVerification()">Resend verification</button>
+                </div>
+            </form>
+            
+            <div class="signup-link">
+                Don't have an account? <a href="/signup">Sign Up</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        feather.replace();
+        
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simple check - if there's a token, redirect to dashboard
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                window.location.href = '/dashboard';
+            }
+        });
+        
+
+        
+        function showForgotPassword() {
+            const email = document.getElementById('email').value;
+            if (!email) {
+                alert('Please enter your email address first');
+                return;
+            }
+            
+            if (confirm(`Send password reset email to ${email}?`)) {
+                fetch('/auth/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to send password reset email. Please try again.');
+                });
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('d-none');
+            document.getElementById('loginSuccess').classList.add('d-none');
+            // Toggle verify notice when appropriate
+            const verify = document.getElementById('verifyNotice');
+            if ((message || '').toLowerCase().includes('verify')) {
+                verify.classList.remove('d-none');
+            } else {
+                verify.classList.add('d-none');
+            }
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('loginSuccess');
+            successDiv.textContent = message;
+            successDiv.classList.remove('d-none');
+            document.getElementById('loginError').classList.add('d-none');
+        }
+        
+        function clearMessages() {
+            document.getElementById('loginError').classList.add('d-none');
+            document.getElementById('loginSuccess').classList.add('d-none');
+        }
+        
+        // Form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            clearMessages();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            
+            // Show loading state
+            loginBtn.innerHTML = '<i data-feather="loader" class="spinner-border spinner-border-sm"></i> Signing In...';
+            loginBtn.disabled = true;
+            
+            try {
+                const formData = {
+                    email: document.getElementById('email').value.trim(),
+                    password: document.getElementById('password').value
+                };
+                
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store tokens and user info
+                    localStorage.setItem('accessToken', data.access_token);
+                    localStorage.setItem('refreshToken', data.refresh_token);
+                    localStorage.setItem('userInfo', JSON.stringify(data.user));
+                    localStorage.setItem('authCredentials', data.access_token);
+                    
+                    showSuccess('Login successful! Redirecting...');
+                    
+                    // Redirect to dashboard after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showError(data.detail || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('An error occurred during login. Please try again.');
+            } finally {
+                // Reset button state
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+                feather.replace();
+            }
+        });
+        
+        async function resendVerification() {
+            try {
+                const email = document.getElementById('email').value.trim();
+                if (!email) { alert('Enter your email first.'); return; }
+                const resp = await fetch('/auth/resend-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    showSuccess('Verification link sent (check your inbox).');
+                } else {
+                    showError(data.detail || 'Failed to resend verification.');
+                }
+            } catch (e) {
+                showError('Failed to resend verification.');
+            }
+        }
+        
+        // Auto-fill demo credentials for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if this is a test environment
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                // Add click handler to demo credentials
+                const demoCredentials = document.querySelector('.demo-credentials');
+                demoCredentials.style.cursor = 'pointer';
+                demoCredentials.addEventListener('click', function() {
+                    document.getElementById('email').value = 'demo@secretvault.com';
+                    document.getElementById('password').value = 'DemoPass123!';
+                });
+                
+                // Add hover effect
+                demoCredentials.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#e9ecef';
+                });
+                
+                demoCredentials.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '#f8f9fa';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

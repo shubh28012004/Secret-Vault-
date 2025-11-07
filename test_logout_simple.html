@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { margin: 5px; padding: 10px 15px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Logout Functionality Test</h1>
+    
+    <div class="test-section">
+        <h3>Current localStorage Contents:</h3>
+        <div id="localStorageContents"></div>
+        <button onclick="showLocalStorage()">Refresh localStorage</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Logout Functions:</h3>
+        <button onclick="testNormalLogout()">Test Normal Logout</button>
+        <button onclick="testForceLogout()">Test Force Logout</button>
+        <button onclick="clearAllStorage()">Clear All Storage</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Results:</h3>
+        <div id="testResults"></div>
+    </div>
+    
+    <script>
+        function showLocalStorage() {
+            const contents = document.getElementById('localStorageContents');
+            let html = '<ul>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                html += `<li><strong>${key}:</strong> ${value}</li>`;
+            }
+            html += '</ul>';
+            contents.innerHTML = html;
+        }
+        
+        function testNormalLogout() {
+            addResult('Testing normal logout...', 'info');
+            
+            // Simulate the normal logout function
+            try {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('userInfo');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('authCredentials');
+                
+                addResult('Normal logout completed successfully!', 'success');
+                showLocalStorage();
+            } catch (error) {
+                addResult('Normal logout failed: ' + error.message, 'error');
+            }
+        }
+        
+        function testForceLogout() {
+            addResult('Testing force logout...', 'info');
+            
+            try {
+                // Clear all storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                addResult('Force logout completed successfully!', 'success');
+                showLocalStorage();
+            } catch (error) {
+                addResult('Force logout failed: ' + error.message, 'error');
+            }
+        }
+        
+        function clearAllStorage() {
+            addResult('Clearing all storage...', 'info');
+            
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                addResult('All storage cleared successfully!', 'success');
+                showLocalStorage();
+            } catch (error) {
+                addResult('Failed to clear storage: ' + error.message, 'error');
+            }
+        }
+        
+        function addResult(message, type) {
+            const results = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            results.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        // Show localStorage on page load
+        showLocalStorage();
+        addResult('Test page loaded', 'info');
+    </script>
+</body>
+</html>
