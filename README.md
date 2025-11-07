@@ -1,4 +1,4 @@
-# Secret Vault 2.0
+# Secret Vault 
 
 A secure credential management system built with FastAPI, SQLite, and encryption (Fernet) with optional HashiCorp Vault key management.
 
@@ -474,3 +474,4 @@ For issues and questions:
 - Rate limiting
 - Input sanitization
 - Regular security audits
+
